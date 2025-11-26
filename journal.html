@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Journal — Cybersecurity Portfolio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="inner">
+      <div class="brand"><div class="logo">K</div><div style="font-weight:700">Kimae</div></div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="projects.html">Projects</a>
+        <a href="blog.html">Blog</a>
+        <a href="journal.html">Journal</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Journal</h1>
+    <p>Lab notes, reflections and writeups — each entry is a Markdown file in <code>/journals</code>.</p>
+
+    <div id="journalList" class="section">
+      <div class="card">Loading journals…</div>
+    </div>
+  </main>
+
+<script>
+  // Configuration (your GitHub username & repo)
+  const username = "Qimae";
+  const repo = "OUK-portfolio";
+  // If your default branch is not "main", change this below:
+  const branch = "main";
+
+  // GitHub API to list contents of journals folder
+  const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/journals?ref=${branch}`;
+
+  function mkTitle(name){
+    return name.replace(/\.md$/i,"").replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  fetch(apiUrl)
+    .then(r => {
+      if(!r.ok) throw new Error("Could not fetch journal folder. Make sure /journals exists and is public.");
+      return r.json();
+    })
+    .then(files => {
+      const container = document.getElementById("journalList");
+      container.innerHTML = "";
+      const mdFiles = files.filter(f => f.name && f.name.toLowerCase().endsWith(".md"));
+
+      if(mdFiles.length === 0){
+        container.innerHTML = '<div class="card"><p>No journals found. Add .md files to the <code>/journals</code> folder and push to GitHub.</p></div>';
+        return;
+      }
+
+      mdFiles.forEach(f => {
+        const title = mkTitle(f.name);
+        // Link to the GH-Pages rendered path (will render markdown)
+        const ghPagesUrl = `https://${username.toLowerCase()}.github.io/${repo}/journals/${f.name}`;
+
+        const el = document.createElement("div");
+        el.className = "journal-entry card";
+        el.innerHTML = `
+          <h3>${title}</h3>
+          <small>Source: <a href="${f.html_url}" target="_blank">GitHub</a></small>
+          <p><a href="${ghPagesUrl}" target="_blank">Read journal →</a></p>
+        `;
+        container.appendChild(el);
+      });
+    })
+    .catch(err => {
+      const container = document.getElementById("journalList");
+      container.innerHTML = `<div class="card"><strong>Error:</strong> ${err.message}</div>`;
+    });
+</script>
+</body>
+</html>
